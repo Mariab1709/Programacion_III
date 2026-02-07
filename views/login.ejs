@@ -1,0 +1,23 @@
+<%- include('layout', { body: ` <div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h2 class="text-center fw-bold mb-4">Bienvenido de nuevo</h2>
+            <form action="/api/auth/login" method="POST">
+                <!-- Este campo le dice al servidor que mande a la página de inicio -->
+                <input type="hidden" name="_ui" value="true">
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" required placeholder="tu@email.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" name="password" class="form-control" required placeholder="********">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-3">Ingresar</button>
+            </form>
+            <p class="text-center mt-3">¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+        </div>
+    </div>
+    </div>
+    ` }) %>

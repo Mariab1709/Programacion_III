@@ -1,0 +1,51 @@
+<%- include('layout', { body: ` <div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card p-4">
+            <h2 class="text-center fw-bold mb-4">Únete a Nosotros</h2>
+            <form action="/api/auth/register" method="POST" id="registerForm">
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" name="name" class="form-control" required placeholder="Tu nombre completo">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" required placeholder="ejemplo@correo.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Contraseña</label>
+                    <input type="password" name="password" class="form-control" required placeholder="********">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nivel de Usuario</label>
+                    <select name="level" class="form-select">
+                        <option value="usuario">Cliente</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-3">Crear Cuenta</button>
+            </form>
+            <p class="text-center mt-3">¿Ya tienes cuenta? <a href="/login">Inicia sesión</a></p>
+        </div>
+    </div>
+    </div>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert('¡Registro exitoso! Ahora inicia sesión.');
+                window.location.href = '/login';
+            } else {
+                alert('Error: ' + result.message);
+            }
+        });
+    </script>
+    ` }) %>

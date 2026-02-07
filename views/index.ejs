@@ -1,0 +1,50 @@
+<%- include('layout', { body: ` <div class="hero-section text-white d-flex align-items-center justify-content-center"
+    style="
+        background: linear-gradient(rgba(10, 10, 31, 0.7), rgba(10, 10, 31, 0.7)), url('/images/hero-bg.png');
+        background-size: cover;
+        background-position: center;
+        height: 75vh;
+        border-radius: 20px;
+        margin-top: -20px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.1);
+    ">
+    <div class="text-center p-5">
+        <h1 class="display-2 fw-bold mb-3">PC Master Store</h1>
+        <p class="lead mb-4 fs-3 opacity-90">Hardware de última generación y setups de alto rendimiento.</p>
+
+        ${(typeof user !== 'undefined' && user) ? `
+        <div class="bg-dark bg-opacity-50 p-3 rounded-pill mb-4 d-inline-block border border-info">
+            <h2 class="h4 mb-0 px-3 text-info">¡Bienvenida de nuevo, ${user.name}! 👋</h2>
+        </div>
+        <br>
+        <a href="/products" class="btn btn-info btn-lg px-5 py-3 fw-bold shadow-lg">Comprar Equipos</a>
+        ` : `
+        <a href="/register" class="btn btn-primary btn-lg px-5 py-3 fw-bold shadow-lg me-3">Ver Productos</a>
+        <a href="/login" class="btn btn-outline-light btn-lg px-5 py-3 fw-bold">Entrar</a>
+        `}
+    </div>
+    </div>
+
+    <style>
+        .hero-section {
+            transition: all 0.5s ease;
+        }
+
+        .hero-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #6366f1, #a855f7);
+            border: none;
+        }
+
+        .btn-info {
+            background: linear-gradient(45deg, #06b6d4, #3b82f6);
+            color: white;
+            border: none;
+        }
+    </style>
+    ` }) %>
