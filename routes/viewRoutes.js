@@ -53,6 +53,13 @@ router.get('/admin/products/:id/edit', isAuthenticated, isAdmin, async (req, res
     }
 });
 
+router.get('/cart', isAuthenticated, (req, res) => {
+    if (req.session.user.level === 'admin') {
+        return res.redirect('/admin/dashboard');
+    }
+    res.render('cart', { user: req.session.user || null });
+});
+
 router.get('/login', (req, res) => {
     res.render('login', { error: null, user: req.session.user || null });
 });

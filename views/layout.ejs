@@ -7,6 +7,7 @@
     <title>PC Master</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root {
             --primary: #6366f1;
@@ -71,14 +72,63 @@
                         <span class="navbar-text me-3">Hola, <strong>
                                 <%= user.name %>
                             </strong></span>
-                        <a href="/logout" class="btn btn-outline-danger btn-sm">Salir</a>
-                        <% } %>
+                        <% if (user.level !=='admin' ) { %>
+                            <a href="/cart" class="btn btn-outline-primary btn-sm me-3 position-relative">
+                                <i class="bi bi-cart3"></i>
+                            </a>
+                            <% } %>
+                                <a href="/logout" class="btn btn-outline-danger btn-sm">Salir</a>
+                                <% } %>
             </div>
         </div>
     </nav>
     <div class="container">
         <%- body %>
     </div>
+
+    <!-- Contenedor de Toasts Global -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+        <div id="liveToast" class="toast border-0 rounded-4 shadow-lg" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex bg-white rounded-4 overflow-hidden border">
+                <div id="toastIconContainer" class="p-3 d-flex align-items-center">
+                    <i id="toastIcon" class="bi fs-4"></i>
+                </div>
+                <div class="toast-body p-3 flex-grow-1">
+                    <strong id="toastTitle" class="d-block mb-1"></strong>
+                    <span id="toastMessage" class="text-muted small"></span>
+                </div>
+                <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.showToast = (title, message, type = 'success') => {
+            const toastEl = document.getElementById('liveToast');
+            const icon = document.getElementById('toastIcon');
+            const iconContainer = document.getElementById('toastIconContainer');
+            const titleEl = document.getElementById('toastTitle');
+            const msgEl = document.getElementById('toastMessage');
+
+            if (type === 'success') {
+                icon.className = 'bi bi-check-circle-fill text-success';
+                iconContainer.style.backgroundColor = '#f0fff4';
+                titleEl.className = 'text-success';
+            } else {
+                icon.className = 'bi bi-exclamation-triangle-fill text-danger';
+                iconContainer.style.backgroundColor = '#fff5f5';
+                titleEl.className = 'text-danger';
+            }
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        };
+    </script>
 </body>
 
 </html>
