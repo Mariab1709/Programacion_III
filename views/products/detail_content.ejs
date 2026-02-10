@@ -1,0 +1,174 @@
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-primary">Inicio</a></li>
+        <li class="breadcrumb-item"><a href="/products" class="text-decoration-none text-primary">Productos</a></li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <%= product.name %>
+        </li>
+    </ol>
+</nav>
+
+<div class="row g-5">
+    <!-- Imagen del Producto -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm overflow-hidden rounded-4">
+            <img src="<%= product.image %>" class="img-fluid" alt="<%= product.name %>"
+                style="width: 100%; height: 500px; object-fit: cover;">
+        </div>
+    </div>
+
+    <!-- Detalles del Producto -->
+    <div class="col-md-6">
+        <div class="ps-md-4">
+            <span class="badge bg-secondary mb-3 px-3 py-2 fs-6">
+                <%= product.code %>
+            </span>
+            <h1 class="display-5 fw-bold mb-3">
+                <%= product.name %>
+            </h1>
+            <div class="d-flex align-items-center mb-4">
+                <span class="h2 fw-bold text-primary mb-0">$<%= product.price %></span>
+                <span id="stockBadge"
+                    class="ms-3 badge <%= product.stock > 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' %> px-3 py-2 border">
+                    <%= product.stock> 0 ? 'En Stock: ' + product.stock : 'Agotado' %>
+                </span>
+            </div>
+
+            <div class="card border-0 bg-light p-4 rounded-4 mb-4">
+                <h5 class="fw-bold mb-3">Descripción y Especificaciones</h5>
+                <p class="text-muted lh-base mb-0" style="white-space: pre-line;">
+                    <%= product.description %>
+                </p>
+            </div>
+
+            <div class="d-grid gap-3 d-md-flex">
+                <% if (user && user.level==='admin' ) { %>
+                    <a href="/admin/products/<%= product.id %>/edit"
+                        class="btn btn-warning btn-lg px-4 py-3 fw-bold rounded-pill shadow-sm">
+                        <i class="bi bi-pencil-square me-2"></i>Editar este Equipo
+                    </a>
+                    <button class="btn btn-outline-danger btn-lg px-4 py-3 rounded-pill"
+                        data-product-id="<%= product.id %>" onclick="confirmDelete(this)">
+                        <i class="bi bi-trash me-2"></i>Eliminar Equipo
+                    </button>
+                    <% } else { %>
+                        <div class="d-flex align-items-center me-md-2 mb-3 mb-md-0">
+                            <input type="number" id="cartQuantity"
+                                class="form-control rounded-pill text-center border-primary shadow-sm" value="1" min="1"
+                                max="<%= product.stock %>" style="width: 70px;">
+                        </div>
+                        <button class="btn btn-outline-primary btn-lg px-4 py-3 fw-bold rounded-pill shadow-sm"
+                            id="addToCartBtn" data-product-id="<%= product.id %>"
+                            data-product-name="<%= product.name %>" <%=product.stock <=0 ? 'disabled' : '' %>>
+                            <i class="bi bi-cart-plus me-2"></i>Añadir
+                        </button>
+                        <button class="btn btn-primary btn-lg px-4 py-3 fw-bold rounded-pill shadow-sm" id="buyNowBtn"
+                            data-product-id="<%= product.id %>" data-product-name="<%= product.name %>" <%=product.stock
+                            <=0 ? 'disabled' : '' %>>
+                            <i class="bi bi-lightning-fill me-2"></i>Comprar Ahora
+                        </button>
+                        <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function handleCartAction(button, redirect = false) {
+        const productId = button.getAttribute('data-product-id');
+        const productName = button.getAttribute('data-product-name');
+        const quantityInput = document.getElementById('cartQuantity');
+        const quantity = quantityInput ? parseInt(quantityInput.value) : 1;
+
+        try {
+            const response = await fetch('/api/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, quantity })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Actualizar Stock en la UI inmediatamente
+                const stockBadge = document.getElementById('stockBadge');
+                if (stockBadge && data.updatedStock !== undefined) {
+                    stockBadge.innerText = data.updatedStock > 0 ? `En Stock: ${data.updatedStock}` : 'Agotado';
+                    if (quantityInput) {
+                        quantityInput.max = data.updatedStock;
+                    }
+                }
+
+                if (redirect) {
+                    showToast('¡Procesando Compra!', `Redirigiendo al carrito para finalizar con tu ${productName}...`, 'success');
+                    setTimeout(() => {
+                        window.location.href = '/cart';
+                    }, 1200);
+                } else {
+                    showToast('¡Carrito Actualizado!', `${quantity} unidad(es) de ${productName} añadidas.`, 'success');
+                }
+            } else {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                } else {
+                    showToast('Error', data.message || 'No se pudo añadir', 'error');
+                }
+            }
+        } catch (error) {
+            showToast('Error de Conexión', 'Problema al contactar con el servidor', 'error');
+        }
+    }
+
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', () => handleCartAction(addToCartBtn, false));
+    }
+
+    const buyNowBtn = document.getElementById('buyNowBtn');
+    if (buyNowBtn) {
+        buyNowBtn.addEventListener('click', () => handleCartAction(buyNowBtn, true));
+    }
+
+    async function confirmDelete(button) {
+        const id = button.getAttribute('data-product-id');
+        if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+            try {
+                const response = await fetch('/api/products/' + id, {
+                    method: 'DELETE'
+                });
+                if (response.ok) {
+                    window.location.href = '/products';
+                } else {
+                    alert('Error al eliminar el producto');
+                }
+            } catch (error) {
+                console.error('Error al borrar:', error);
+                alert('Ocurrió un error al conectar con el servidor');
+            }
+        }
+    }
+</script>
+
+<style>
+    .breadcrumb-item+.breadcrumb-item::before {
+        content: "›";
+        font-size: 1.2rem;
+        vertical-align: middle;
+    }
+
+    .bg-success-subtle {
+        background-color: #d1e7dd !important;
+    }
+
+    .text-success {
+        color: #0f5132 !important;
+    }
+
+    .bg-danger-subtle {
+        background-color: #f8d7da !important;
+    }
+
+    .text-danger {
+        color: #842029 !important;
+    }
+</style>

@@ -33,8 +33,21 @@ app.use(session({
     }
 }));
 
+// Modelos y Asociaciones
+const User = require('./models/User');
+const Product = require('./models/Product');
+const CartItem = require('./models/CartItem');
+
+// Definir relaciones
+User.hasMany(CartItem, { foreignKey: 'userId' });
+CartItem.belongsTo(User, { foreignKey: 'userId' });
+Product.hasMany(CartItem, { foreignKey: 'productId' });
+CartItem.belongsTo(Product, { foreignKey: 'productId' });
+
 // Rutas
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/products', require('./routes/products'));
+app.use('/api/cart', require('./routes/cart'));
 app.use('/', require('./routes/viewRoutes'));
 
 const PORT = process.env.PORT || 3000;

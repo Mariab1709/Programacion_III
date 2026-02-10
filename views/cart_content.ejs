@@ -1,0 +1,184 @@
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="fw-bold mb-0">Mi Carrito de Compras 🛒</h1>
+        <a href="/products" class="btn btn-outline-primary rounded-pill">Seguir Comprando</a>
+    </div>
+
+    <div id="cartAlert"></div>
+
+    <div class="row g-4">
+        <!-- Lista de Productos -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div id="cartContainer">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen de Compra -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+                <h4 class="fw-bold mb-4">Resumen</h4>
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Subtotal</span>
+                    <span class="fw-bold" id="cartTotalDisplay">$0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="text-muted">Envío</span>
+                    <span class="text-success fw-bold">Gratis</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-4">
+                    <span class="fs-5 fw-bold">Total</span>
+                    <span class="fs-5 fw-bold text-primary" id="cartFinalTotal">$0.00</span>
+                </div>
+                <button class="btn btn-primary btn-lg w-100 fw-bold rounded-pill mb-3" id="checkoutBtn" disabled>
+                    Finalizar Compra
+                </button>
+                <button class="btn btn-outline-danger w-100 rounded-pill" onclick="clearCart()">
+                    Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function loadCart() {
+        try {
+            const response = await fetch('/api/cart');
+            const data = await response.json();
+
+            const container = document.getElementById('cartContainer');
+            const totalDisplay = document.getElementById('cartTotalDisplay');
+            const finalTotal = document.getElementById('cartFinalTotal');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            if (!data.items || data.items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-cart-x display-1 text-muted mb-3"></i>
+                        <p class="lead text-muted">Tu carrito está vacío</p>
+                        <a href="/products" class="btn btn-primary rounded-pill px-4">Ir a la Tienda</a>
+                    </div>
+                `;
+                totalDisplay.innerText = '$0.00';
+                finalTotal.innerText = '$0.00';
+                checkoutBtn.disabled = true;
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Producto</th><th>Cantidad</th><th>Subtotal</th><th></th></tr></thead><tbody>';
+
+            data.items.forEach(item => {
+                html += `
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="${item.Product.image}" class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">${item.Product.name}</h6>
+                                    <small class="text-muted">$${item.Product.price} c/u</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-0" 
+                                    onclick="changeQty(${item.id}, ${item.quantity - 1})" ${item.quantity <= 1 ? 'disabled' : ''}>-</button>
+                                <span class="mx-3 fw-bold">${item.quantity}</span>
+                                <button class="btn btn-sm btn-outline-secondary rounded-circle px-2 py-0" 
+                                    onclick="changeQty(${item.id}, ${item.quantity + 1})">+</button>
+                            </div>
+                        </td>
+                        <td class="fw-bold">$${item.subtotal.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-link text-danger p-0" onclick="removeItem(${item.id})">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+            totalDisplay.innerText = '$' + data.total.toFixed(2);
+            finalTotal.innerText = '$' + data.total.toFixed(2);
+            checkoutBtn.disabled = false;
+            checkoutBtn.onclick = performCheckout;
+
+        } catch (error) {
+            console.error('Error al cargar carrito:', error);
+        }
+    }
+
+    async function changeQty(id, newQty) {
+        if (newQty < 1) return;
+        try {
+            const response = await fetch('/api/cart/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quantity: newQty })
+            });
+            if (response.ok) {
+                loadCart();
+            } else {
+                const data = await response.json();
+                showToast('Error', data.message || 'No se pudo actualizar la cantidad', 'error');
+            }
+        } catch (error) {
+            showToast('Error', 'Error de conexión', 'error');
+        }
+    }
+
+    async function performCheckout() {
+        const btn = document.getElementById('checkoutBtn');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
+        try {
+            const response = await fetch('/api/cart/checkout', { method: 'POST' });
+            if (response.ok) {
+                showToast('¡Compra Exitosa! 🎉', 'Tu pedido ha sido procesado correctamente. ¡Gracias por confiar en PC Master!', 'success');
+                setTimeout(() => {
+                    window.location.href = '/products';
+                }, 2000);
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                showToast('Error', 'No se pudo finalizar la compra', 'error');
+            }
+        } catch (error) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            showToast('Error', 'Error de conexión', 'error');
+        }
+    }
+
+    async function clearCart() {
+        if (confirm('¿Estás seguro de que quieres vaciar el carrito? El stock volverá al inventario.')) {
+            const response = await fetch('/api/cart', { method: 'DELETE' });
+            if (response.ok) {
+                showToast('Carrito Vaciado', 'Todos los productos han sido eliminados.', 'success');
+                loadCart();
+            }
+        }
+    }
+
+    async function removeItem(id) {
+        const response = await fetch('/api/cart/' + id, { method: 'DELETE' });
+        if (response.ok) {
+            showToast('Producto Eliminado', 'Se ha quitado el equipo del carrito.', 'success');
+            loadCart();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadCart);
+</script>
