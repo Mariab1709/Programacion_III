@@ -61,7 +61,7 @@ router.get('/cart', isAuthenticated, (req, res) => {
 });
 
 router.get('/login', (req, res) => {
-    res.render('login', { error: null, user: req.session.user || null });
+    res.render('login', { error: req.query.error || null, user: req.session.user || null });
 });
 
 router.get('/register', (req, res) => {

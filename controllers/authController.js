@@ -27,11 +27,17 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
+      if (_ui === 'true' || (req.headers['accept'] && req.headers['accept'].includes('text/html'))) {
+        return res.redirect('/login?error=Credenciales+inválidas');
+      }
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
     const isValid = await user.validPassword(password);
     if (!isValid) {
+      if (_ui === 'true' || (req.headers['accept'] && req.headers['accept'].includes('text/html'))) {
+        return res.redirect('/login?error=Credenciales+inválidas');
+      }
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
