@@ -35,6 +35,7 @@ app.use(session({
 
 // Rutas
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/products', require('./routes/products'));
 app.use('/', require('./routes/viewRoutes'));
 
 const PORT = process.env.PORT || 3000;

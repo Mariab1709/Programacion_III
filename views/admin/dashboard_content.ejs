@@ -1,0 +1,110 @@
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <h1 class="fw-bold">Panel de Administración</h1>
+        <hr>
+    </div>
+
+    <!-- Formulario para agregar producto -->
+    <div class="col-md-4">
+        <div class="card p-4 sticky-top" style="top: 20px;">
+            <h4 class="fw-bold mb-4">Agregar Producto</h4>
+            <form action="/api/products" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="_ui" value="true">
+                <div class="mb-3">
+                    <label class="form-label">Nombre del Equipo</label>
+                    <input type="text" name="name" class="form-control" required placeholder="Ej: Laptop Gamer Nitro 5">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Descripción</label>
+                    <textarea name="description" class="form-control" rows="3" required
+                        placeholder="Especificaciones técnicas..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Precio ($)</label>
+                    <input type="number" name="price" step="0.01" class="form-control" required placeholder="0.00">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Stock</label>
+                    <input type="number" name="stock" class="form-control" required placeholder="Cantidad disponible">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Imagen del Producto (JPG/PNG)</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Guardar Producto</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="col-md-8">
+        <div class="card p-4">
+            <h4 class="fw-bold mb-4">Inventario Actual</h4>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (products && products.length> 0) { %>
+                            <% products.forEach(product=> { %>
+                                <tr>
+                                    <td><span class="badge bg-secondary">
+                                            <%= product.code %>
+                                        </span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="<%= product.image %>" alt="<%= product.name %>"
+                                                class="rounded me-3"
+                                                style="width: 40px; height: 40px; object-fit: cover;">
+                                            <span class="fw-bold">
+                                                <%= product.name %>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>$<%= product.price %>
+                                    </td>
+                                    <td><span class="badge <%= product.stock > 0 ? 'bg-success' : 'bg-danger' %>">
+                                            <%= product.stock %>
+                                        </span></td>
+                                    <td>
+                                        <a href="/admin/products/<%= product.id %>/edit"
+                                            class="btn btn-sm btn-outline-warning me-1">Editar</a>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                            data-product-id="<%= product.id %>"
+                                            onclick="confirmDelete(this)">Borrar</button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted small">No hay productos
+                                                registrados aún.</td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function confirmDelete(button) {
+        const id = button.getAttribute('data-product-id');
+        if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+            const response = await fetch('/api/products/' + id, { method: 'DELETE' });
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Error al eliminar el producto');
+            }
+        }
+    }
+</script>
